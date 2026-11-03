@@ -77,11 +77,71 @@ describe("check_packages tool handler (contract)", () => {
       latest: "19.3.1",
     });
     expect(parsed.results[6]).toEqual({ e: "pub", n: "htttp", s: "not_found" });
+    expect(parsed.results[2]).toMatchObject({
+      s: "ok",
+      v: "2.31.0",
+      v_exists: true,
+      v_yanked: false,
+    });
+    expect(parsed.results[3]).toMatchObject({ s: "ok", v: ">=2.0,<2.20", v_match: "2.19.1" });
+    expect(parsed.results[4]).toMatchObject({ s: "ok", v: "^1.0.0", v_match: "1.6.0" });
+    expect(parsed.results[5]).toMatchObject({ s: "ok", v: "~10.0", v_match: "v10.48.29" });
+    expect(parsed.results[7]).toEqual({
+      e: "npm",
+      n: "left-pad",
+      s: "deprecated",
+      stable: "1.3.0",
+      latest: "1.3.0",
+      v: "1.3.0",
+      v_exists: true,
+      v_deprecated: true,
+      msg: "use String.prototype.padStart()",
+    });
+    expect(parsed.results[1]).toMatchObject({
+      e: "npm",
+      n: "request",
+      s: "deprecated",
+      stable: "2.88.2",
+    });
+    expect(parsed.results[1]?.["msg"]).toBe(
+      "request has been deprecated, see https://github.com/request/request/issues/3142",
+    );
     expect(parsed.results[8]).toEqual({
       e: "cargo",
       n: "serde",
       s: "error",
       msg: 'unknown ecosystem "cargo"; supported: npm, pypi, pub, packagist',
+    });
+  });
+
+  it("fails only the item whose range cannot be parsed", async () => {
+    const tool = createCheckPackagesTool(deps());
+    const result = await tool.handler({
+      packages: [
+        { ecosystem: "npm", name: "react", version: ">>=1" },
+        { ecosystem: "npm", name: "react", version: "^19" },
+      ],
+    });
+    const block = result.content[0];
+    if (block?.type !== "text") throw new Error("expected a text block");
+    const parsed = JSON.parse(block.text) as { results: Array<Record<string, unknown>> };
+    expect(parsed.results[0]).toEqual({
+      e: "npm",
+      n: "react",
+      s: "error",
+      v: ">>=1",
+      msg: 'cannot parse npm version or range ">>=1"',
+    });
+    expect(parsed.results[1]).toMatchObject({ s: "ok", v_match: "19.3.1" });
+  });
+
+  it("reports an unpublished npm package as not_found with the reason", async () => {
+    const tool = createCheckPackagesTool(deps());
+    const result = await tool.handler({ packages: [{ ecosystem: "npm", name: "unpublish-me" }] });
+    const block = result.content[0];
+    if (block?.type !== "text") throw new Error("expected a text block");
+    expect(JSON.parse(block.text)).toEqual({
+      results: [{ e: "npm", n: "unpublish-me", s: "not_found", msg: "unpublished from npm" }],
     });
   });
 

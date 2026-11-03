@@ -1,6 +1,6 @@
-import { InvalidName, RegistryError, UnparseableRange } from "../core/errors.js";
+import { InvalidName, RegistryError } from "../core/errors.js";
 import type { Adapter, FetchJson, FetchOutcome, VersionEntry } from "../core/types.js";
-import { compareSemver, isSemverPrerelease } from "../versions/semver-range.js";
+import { compareSemver, isSemverPrerelease, parseSemverCheck } from "../versions/semver-range.js";
 
 const REGISTRY = "https://registry.npmjs.org";
 /** Abbreviated metadata: dist-tags, versions and per-version `deprecated`, a fraction of the full doc. */
@@ -63,7 +63,12 @@ async function fetchPackage(name: string, http: FetchJson): Promise<FetchOutcome
     typeof tags === "object" && tags !== null ? (tags as { latest?: unknown }).latest : undefined;
 
   const info: FetchOutcome = { kind: "info", name, versions };
-  if (typeof latestTag === "string" && latestTag.length > 0) info.stableHint = latestTag;
+  if (typeof latestTag === "string" && latestTag.length > 0) {
+    info.stableHint = latestTag;
+    // npm has no package-level deprecation; `npm view` reports the latest-tagged version's notice.
+    const latestNotice = versions.find((v) => v.version === latestTag)?.deprecated;
+    if (latestNotice) info.deprecated = { message: latestNotice };
+  }
   return info;
 }
 
@@ -74,7 +79,5 @@ export const npmAdapter: Adapter = {
   fetch: fetchPackage,
   isPrerelease: isSemverPrerelease,
   compare: compareSemver,
-  parseVersionOrRange: () => {
-    throw new UnparseableRange("version checks are not implemented yet");
-  },
+  parseVersionOrRange: (input) => parseSemverCheck(input, { dialect: "npm" }),
 };

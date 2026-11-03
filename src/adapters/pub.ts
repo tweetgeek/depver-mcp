@@ -1,6 +1,10 @@
-import { InvalidName, RegistryError, UnparseableRange } from "../core/errors.js";
+import { InvalidName, RegistryError } from "../core/errors.js";
 import type { Adapter, FetchJson, FetchOutcome, VersionEntry } from "../core/types.js";
-import { compareWithBuildTieBreak, isSemverPrerelease } from "../versions/semver-range.js";
+import {
+  compareWithBuildTieBreak,
+  isSemverPrerelease,
+  parseSemverCheck,
+} from "../versions/semver-range.js";
 
 const API = "https://pub.dev/api/packages";
 const ACCEPT = "application/vnd.pub.v2+json";
@@ -58,6 +62,14 @@ async function fetchPackage(name: string, http: FetchJson): Promise<FetchOutcome
   // pub.dev's `latest` is the newest stable version unless none exists, in which case it is a
   // pre-release and carries no information about stability.
   if (typeof latest === "string" && !isSemverPrerelease(latest)) info.stableHint = latest;
+  if (doc.isDiscontinued === true) {
+    info.deprecated = {
+      message:
+        typeof doc.replacedBy === "string" && doc.replacedBy.length > 0
+          ? `discontinued, replaced by ${doc.replacedBy}`
+          : "discontinued",
+    };
+  }
   return info;
 }
 
@@ -68,7 +80,5 @@ export const pubAdapter: Adapter = {
   fetch: fetchPackage,
   isPrerelease: isSemverPrerelease,
   compare: compareWithBuildTieBreak,
-  parseVersionOrRange: () => {
-    throw new UnparseableRange("version checks are not implemented yet");
-  },
+  parseVersionOrRange: (input) => parseSemverCheck(input, { dialect: "pub" }),
 };

@@ -35,14 +35,20 @@ export function createFetchJson(options: CreateFetchJsonOptions = {}): FetchJson
     const headers: Record<string, string> = { "user-agent": USER_AGENT };
     if (opts.accept) headers["accept"] = opts.accept;
 
+    // AbortController + setTimeout rather than AbortSignal.timeout: same abort semantics, but the
+    // timer is an ordinary one, so it is observable in tests and cleared as soon as headers arrive.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     let response: Response;
     try {
-      response = await doFetch(url, { headers, signal: AbortSignal.timeout(timeoutMs) });
+      response = await doFetch(url, { headers, signal: controller.signal });
     } catch (err) {
-      if (isAbort(err)) {
+      if (controller.signal.aborted || isAbort(err)) {
         throw new RegistryError("timeout", `registry timeout after ${timeoutMs} ms`);
       }
       throw new RegistryError("network", "registry unreachable");
+    } finally {
+      clearTimeout(timer);
     }
 
     const text = await response.text();

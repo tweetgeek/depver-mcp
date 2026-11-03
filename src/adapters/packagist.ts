@@ -1,6 +1,11 @@
-import { InvalidName, RegistryError, UnparseableRange } from "../core/errors.js";
+import { InvalidName, RegistryError } from "../core/errors.js";
 import type { Adapter, FetchJson, FetchOutcome, VersionEntry } from "../core/types.js";
-import { compareComposer, isComposerPrerelease, normalizeComposer } from "../versions/composer.js";
+import {
+  compareComposer,
+  isComposerPrerelease,
+  normalizeComposer,
+  parseComposerCheck,
+} from "../versions/composer.js";
 
 /** Static, CDN-served metadata Composer itself uses; tagged releases only (branches live in ~dev). */
 const P2 = "https://repo.packagist.org/p2";
@@ -93,7 +98,5 @@ export const packagistAdapter: Adapter = {
   fetch: fetchPackage,
   isPrerelease: (v) => isComposerPrerelease(v),
   compare: (a, b) => compareComposer(a, b),
-  parseVersionOrRange: () => {
-    throw new UnparseableRange("version checks are not implemented yet");
-  },
+  parseVersionOrRange: (input) => parseComposerCheck(input),
 };

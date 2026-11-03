@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { pypiAdapter } from "../../../src/adapters/pypi.js";
-import { InvalidName, RegistryError } from "../../../src/core/errors.js";
+import { InvalidName, RegistryError, UnparseableRange } from "../../../src/core/errors.js";
 import { stubFetchJson } from "../../helpers/stub-fetch.js";
 
 const ACCEPT = "application/vnd.pypi.simple.v1+json";
@@ -114,5 +114,39 @@ describe("pypi adapter: ordering", () => {
     expect(pypiAdapter.isPrerelease("1.1.0rc1")).toBe(true);
     expect(pypiAdapter.isPrerelease("1.1.0.post1")).toBe(false);
     expect(pypiAdapter.id).toBe("pypi");
+  });
+});
+
+describe("pypi adapter: project status and yanked releases", () => {
+  it("marks a PEP 792 deprecated project as deprecated", async () => {
+    const stub = stubFetchJson({
+      "https://pypi.org/simple/old-lib/": { status: 200, fixture: "pypi/deprecated-status.json" },
+    });
+    const info = await pypiAdapter.fetch("old-lib", stub.fetchJson);
+    if (info.kind !== "info") throw new Error("expected info");
+    expect(info.deprecated).toEqual({ message: "project marked deprecated on PyPI" });
+  });
+
+  it("reports every version as yanked when all files are yanked, by flag or by reason string", async () => {
+    const stub = stubFetchJson({
+      "https://pypi.org/simple/gone-lib/": { status: 200, fixture: "pypi/all-yanked.json" },
+    });
+    const info = await pypiAdapter.fetch("gone-lib", stub.fetchJson);
+    if (info.kind !== "info") throw new Error("expected info");
+    expect(info.versions.map((v) => [v.version, v.yanked])).toEqual([
+      ["1.0.0", true],
+      ["1.1.0", true],
+    ]);
+  });
+});
+
+describe("pypi adapter: version checks", () => {
+  it("delegates to the PEP 440 specifier parser", () => {
+    expect(pypiAdapter.parseVersionOrRange("2.31.0")).toEqual({ kind: "exact", version: "2.31.0" });
+    const check = pypiAdapter.parseVersionOrRange("~=2.31");
+    if (check.kind !== "range") throw new Error("expected range");
+    expect(check.matches("2.34.2")).toBe(true);
+    expect(check.matches("3.0.0")).toBe(false);
+    expect(() => pypiAdapter.parseVersionOrRange("^1.0")).toThrow(UnparseableRange);
   });
 });

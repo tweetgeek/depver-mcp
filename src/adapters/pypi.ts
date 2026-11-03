@@ -1,6 +1,11 @@
-import { InvalidName, RegistryError, UnparseableRange } from "../core/errors.js";
+import { InvalidName, RegistryError } from "../core/errors.js";
 import type { Adapter, FetchJson, FetchOutcome, VersionEntry } from "../core/types.js";
-import { comparePep440, isPep440Prerelease, parsePep440 } from "../versions/pep440.js";
+import {
+  comparePep440,
+  isPep440Prerelease,
+  parsePep440,
+  parsePep440Check,
+} from "../versions/pep440.js";
 
 const SIMPLE = "https://pypi.org/simple";
 /** PEP 691 JSON form of the Simple API: versions (PEP 700), per-file yanked, project status (PEP 792). */
@@ -109,7 +114,5 @@ export const pypiAdapter: Adapter = {
   fetch: fetchPackage,
   isPrerelease: (v) => isPep440Prerelease(v),
   compare: (a, b) => comparePep440(a, b),
-  parseVersionOrRange: () => {
-    throw new UnparseableRange("version checks are not implemented yet");
-  },
+  parseVersionOrRange: (input) => parsePep440Check(input),
 };

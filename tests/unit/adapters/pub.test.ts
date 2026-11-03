@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { pubAdapter } from "../../../src/adapters/pub.js";
-import { InvalidName, RegistryError } from "../../../src/core/errors.js";
+import { InvalidName, RegistryError, UnparseableRange } from "../../../src/core/errors.js";
 import { stubFetchJson } from "../../helpers/stub-fetch.js";
 
 describe("pub adapter: normalizeName", () => {
@@ -99,5 +99,57 @@ describe("pub adapter: ordering", () => {
     expect(pubAdapter.compare("1.6.0", "1.5.0-beta.2")).toBeGreaterThan(0);
     expect(pubAdapter.isPrerelease("1.5.0-beta.2")).toBe(true);
     expect(pubAdapter.id).toBe("pub");
+  });
+});
+
+describe("pub adapter: discontinued packages", () => {
+  it("marks a discontinued package deprecated and names the replacement", async () => {
+    const stub = stubFetchJson({
+      "https://pub.dev/api/packages/pedantic": { status: 200, fixture: "pub/pedantic.json" },
+    });
+    const info = await pubAdapter.fetch("pedantic", stub.fetchJson);
+    if (info.kind !== "info") throw new Error("expected info");
+    expect(info.deprecated).toEqual({ message: "discontinued, replaced by lints" });
+  });
+
+  it("marks a discontinued package without replacement as plainly discontinued", async () => {
+    const stub = stubFetchJson({
+      "https://pub.dev/api/packages/gone": {
+        status: 200,
+        json: {
+          name: "gone",
+          isDiscontinued: true,
+          latest: { version: "1.0.0" },
+          versions: [{ version: "1.0.0" }],
+        },
+      },
+    });
+    const info = await pubAdapter.fetch("gone", stub.fetchJson);
+    if (info.kind !== "info") throw new Error("expected info");
+    expect(info.deprecated).toEqual({ message: "discontinued" });
+  });
+
+  it("reports every version as yanked for an all-retracted package", async () => {
+    const stub = stubFetchJson({
+      "https://pub.dev/api/packages/all_retracted": {
+        status: 200,
+        fixture: "pub/all-retracted.json",
+      },
+    });
+    const info = await pubAdapter.fetch("all_retracted", stub.fetchJson);
+    if (info.kind !== "info") throw new Error("expected info");
+    expect(info.versions.every((v) => v.yanked)).toBe(true);
+    expect(info.deprecated).toBeUndefined();
+  });
+});
+
+describe("pub adapter: version checks", () => {
+  it("delegates to the pub dialect of the semver module", () => {
+    expect(pubAdapter.parseVersionOrRange("1.0.0")).toEqual({ kind: "exact", version: "1.0.0" });
+    const check = pubAdapter.parseVersionOrRange(">=0.13.0 <1.0.0");
+    if (check.kind !== "range") throw new Error("expected range");
+    expect(check.matches("0.13.6")).toBe(true);
+    expect(check.matches("1.0.0")).toBe(false);
+    expect(() => pubAdapter.parseVersionOrRange("~1.2")).toThrow(UnparseableRange);
   });
 });
