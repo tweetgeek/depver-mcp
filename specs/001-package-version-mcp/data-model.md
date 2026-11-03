@@ -38,8 +38,8 @@ Emitted exactly once per input item, in input order.
 | `e` | string | always | Canonical ecosystem |
 | `n` | string | always | Name as the registry knows it (normalized) |
 | `s` | `ok` \| `deprecated` \| `not_found` \| `error` | always | Status, see state table |
-| `stable` | string | `s` is `ok` or `deprecated` and at least one non-pre-release version exists | Highest non-pre-release version; for npm, the `latest` dist-tag |
-| `latest` | string | `s` is `ok` or `deprecated` | Highest version overall, including pre-releases |
+| `stable` | string | `s` is `ok` or `deprecated` and at least one non-pre-release, non-yanked version exists | Highest non-pre-release, non-yanked version; for npm, the `latest` dist-tag when it is not a pre-release |
+| `latest` | string | `s` is `ok` or `deprecated` and at least one non-yanked version exists | Highest non-yanked version overall, including pre-releases |
 | `v` | string | input had `version` | Echo of the requested version or range, so the agent can correlate |
 | `v_exists` | boolean | input `version` was exact and `s` is `ok` or `deprecated` | The exact version is published (a yanked version still exists; see `v_yanked`) |
 | `v_yanked` | boolean | `v_exists` is true and the registry has a yank/retract flag for that version | Version is yanked (PyPI) or retracted (pub.dev) |
