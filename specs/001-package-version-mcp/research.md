@@ -186,8 +186,9 @@ serves recorded fixtures from `tests/fixtures/<ecosystem>/`. Each adapter has at
 package, pre-release-as-newest, deprecated/abandoned/discontinued, yanked/retracted version,
 not-found, nothing-installable (unpublished, all yanked, quarantined, where the registry can express it), malformed body, timeout. Version modules are
 tested table-driven against cases taken from the ecosystems' own documentation. A contract test
-boots the server in-process and calls `check_packages` end to end with the stub HTTP layer. A CI
-guard sets an invalid `HTTPS_PROXY` so any accidental real request fails loudly.
+boots the server in-process and calls `check_packages` end to end with the stub HTTP layer. The
+vitest setup file replaces the global `fetch` with a throwing function (a proxy environment
+variable would not work: Node's fetch ignores it before Node 24), and one test proves the guard.
 
 **Rationale**: Constitution VI.
 
