@@ -46,7 +46,7 @@ In the Inspector:
 
 ## Scenario 3: validation boundaries
 
-1. Call with `packages: []` → whole call fails with `packages must contain between 1 and 100 items (got 0)`.
+1. Call with `packages: []` → whole call fails (`isError`) with text containing `packages must contain between 1 and 100 items (got 0)`.
 2. Call with 101 items → whole call fails naming `101`.
 3. Call with 100 valid npm items → succeeds; observe (via stderr debug logging, if enabled) that in-flight requests to the npm registry never exceed the configured per-registry concurrency.
 4. Call the same 100 items again immediately → identical response, no new registry requests.

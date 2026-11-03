@@ -8,11 +8,10 @@ on:
 permissions:
   contents: read
 
-env:
-  # Any accidental real network call from the test suite fails loudly.
-  HTTPS_PROXY: http://127.0.0.1:9
-  HTTP_PROXY: http://127.0.0.1:9
-  NO_PROXY: registry.npmjs.org
+# Network isolation for the test suite is enforced in-process (tests/helpers/no-network.ts replaces
+# the global fetch with a throwing function, verified by tests/unit/no-network.test.ts). Proxy
+# environment variables are not used: Node's fetch ignores them unless NODE_USE_ENV_PROXY is set,
+# which only exists on Node 24+.
 
 jobs:
   test:

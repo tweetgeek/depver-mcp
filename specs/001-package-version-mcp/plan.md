@@ -160,7 +160,7 @@ fixtures grouped by ecosystem so adding an adapter means touching exactly `src/a
 
 ## Delivery pipeline
 
-- `ci.yml`: on pull requests and pushes to `main`, run `npm ci`, `npm run build`, `npm test` on a matrix of Node 20, 22, 24 on `ubuntu-latest`, with `HTTPS_PROXY` pointed at a closed port so any accidental network call fails.
+- `ci.yml`: on pull requests and pushes to `main`, run format check, typecheck, `npm test`, `npm run build` and the bundle guard on a matrix of Node 20, 22, 24 on `ubuntu-latest`. Network isolation is enforced in-process: the vitest setup file replaces the global `fetch` with a throwing function and a dedicated test proves the guard is active (a proxy environment variable would be ignored by Node's fetch on Node 20 and 22).
 - `release.yml`: on tags `v*`, build on Node 22 and `npm publish --provenance --access public`; GitHub release notes generated from Conventional Commits. `CHANGELOG.md` is hand-maintained in Keep a Changelog format and updated in the PR that makes the change.
 - Versioning: `0.1.0` first; minor versions may change response keys until `1.0.0`, which freezes the `check_packages` contract.
 

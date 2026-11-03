@@ -52,8 +52,11 @@ output; the implementation's zod schema and the README must match it.
 ```
 
 Validation failures of the envelope (missing `packages`, 0 or more than 100 items, non-string
-fields) reject the whole call with an MCP tool error whose text names the rule that failed, e.g.
-`packages must contain between 1 and 100 items (got 101)`.
+fields) reject the whole call with an MCP tool error (`isError: true`) whose text contains the rule
+that failed, e.g. `packages must contain between 1 and 100 items (got 101)`. The MCP SDK validates
+the advertised schema before the handler runs and prefixes its own wording
+(`Input validation error: Invalid arguments for tool check_packages: ...`); the handler validates
+again with the same schema, so the sentence is present either way.
 
 Per-item problems (unknown ecosystem, empty or syntactically invalid name, unparseable range) never
 reject the call; they produce `s: "error"` for that item.
