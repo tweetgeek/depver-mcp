@@ -1,0 +1,49 @@
+{
+ "_note": "Recorded 2026-11-03 from the live registry and trimmed to the fields and versions the tests need.",
+ "name": "react",
+ "modified": "2026-10-31T09:15:40.031Z",
+ "dist-tags": {
+  "latest": "19.3.1",
+  "rc": "19.0.0-rc.1"
+ },
+ "versions": {
+  "0.7.1": {
+   "name": "react",
+   "version": "0.7.1",
+   "deprecated": "The jeffbski/react module has been renamed to 'autoflow'. Please update your dependencies to point to autoflow. react@0.8.0+ will now refer to facebook/react"
+  },
+  "16.6.2": {
+   "name": "react",
+   "version": "16.6.2",
+   "deprecated": "React 16.6.2 release is broken. Please update React to 16.6.3."
+  },
+  "18.2.0": {
+   "name": "react",
+   "version": "18.2.0"
+  },
+  "18.3.1": {
+   "name": "react",
+   "version": "18.3.1"
+  },
+  "19.0.0-rc-65e06cb7-20241218": {
+   "name": "react",
+   "version": "19.0.0-rc-65e06cb7-20241218"
+  },
+  "19.0.0": {
+   "name": "react",
+   "version": "19.0.0"
+  },
+  "19.1.0": {
+   "name": "react",
+   "version": "19.1.0"
+  },
+  "19.2.0": {
+   "name": "react",
+   "version": "19.2.0"
+  },
+  "19.3.1": {
+   "name": "react",
+   "version": "19.3.1"
+  }
+ }
+}

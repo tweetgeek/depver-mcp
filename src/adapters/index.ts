@@ -1,5 +1,9 @@
 import { UnknownEcosystem } from "../core/errors.js";
 import { ECOSYSTEMS, type Adapter, type Ecosystem } from "../core/types.js";
+import { npmAdapter } from "./npm.js";
+import { packagistAdapter } from "./packagist.js";
+import { pubAdapter } from "./pub.js";
+import { pypiAdapter } from "./pypi.js";
 
 /** Package-manager and language names agents commonly use, mapped to the canonical ecosystem. */
 const ALIASES: Record<string, Ecosystem> = {
@@ -28,12 +32,10 @@ export function resolveEcosystem(raw: string): Ecosystem {
   return resolved;
 }
 
-/** Filled in by registerAdapter() as adapters are implemented (one file per ecosystem). */
-const ADAPTERS = new Map<Ecosystem, Adapter>();
-
-export function registerAdapter(adapter: Adapter): void {
-  ADAPTERS.set(adapter.id, adapter);
-}
+/** One adapter per ecosystem (Constitution V). Adding a registry means adding one file and one line here. */
+const ADAPTERS = new Map<Ecosystem, Adapter>(
+  [npmAdapter, pypiAdapter, pubAdapter, packagistAdapter].map((a) => [a.id, a]),
+);
 
 export function getAdapter(ecosystem: Ecosystem): Adapter {
   const adapter = ADAPTERS.get(ecosystem);

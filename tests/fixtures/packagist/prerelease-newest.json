@@ -1,0 +1,17 @@
+{
+ "_note": "Synthetic: newest tag is a release candidate.",
+ "minified": "composer/2.0",
+ "packages": {
+  "acme/next": [
+   {
+    "name": "acme/next",
+    "version": "2.1.0-RC1",
+    "version_normalized": "2.1.0.0-RC1"
+   },
+   {
+    "version": "2.0.0",
+    "version_normalized": "2.0.0.0"
+   }
+  ]
+ }
+}

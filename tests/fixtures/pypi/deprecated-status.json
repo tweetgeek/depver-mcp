@@ -1,0 +1,27 @@
+{
+ "_note": "Synthetic: PEP 792 project status deprecated.",
+ "meta": {
+  "api-version": "1.4",
+  "_last-serial": 1
+ },
+ "name": "old-lib",
+ "project-status": {
+  "status": "deprecated"
+ },
+ "versions": [
+  "1.0.0",
+  "1.1.0"
+ ],
+ "files": [
+  {
+   "filename": "old-lib-1.0.0.tar.gz",
+   "yanked": false,
+   "upload-time": "2026-01-01T00:00:00.000000Z"
+  },
+  {
+   "filename": "old-lib-1.1.0.tar.gz",
+   "yanked": false,
+   "upload-time": "2026-01-01T00:00:00.000000Z"
+  }
+ ]
+}

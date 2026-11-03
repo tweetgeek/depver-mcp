@@ -1,0 +1,20 @@
+{
+ "_note": "Synthetic: every version is retracted.",
+ "name": "all_retracted",
+ "latest": {
+  "version": "1.0.0",
+  "pubspec": {}
+ },
+ "versions": [
+  {
+   "version": "1.0.0",
+   "pubspec": {},
+   "retracted": true
+  },
+  {
+   "version": "1.0.1",
+   "pubspec": {},
+   "retracted": true
+  }
+ ]
+}

@@ -1,0 +1,14 @@
+{
+ "_note": "Synthetic: no stable version exists, latest is a pre-release.",
+ "name": "only_pre",
+ "latest": {
+  "version": "0.1.3-main.0",
+  "pubspec": {}
+ },
+ "versions": [
+  {
+   "version": "0.1.3-main.0",
+   "pubspec": {}
+  }
+ ]
+}

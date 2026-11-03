@@ -1,0 +1,13 @@
+{
+ "_note": "Synthetic: quarantined project answers 200 with no versions.",
+ "meta": {
+  "api-version": "1.4",
+  "_last-serial": 1
+ },
+ "name": "quarantined-lib",
+ "project-status": {
+  "status": "quarantined"
+ },
+ "versions": [],
+ "files": []
+}

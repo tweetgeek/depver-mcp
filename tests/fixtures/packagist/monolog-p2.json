@@ -1,0 +1,80 @@
+{
+ "_note": "Recorded 2026-11-03 from the live registry and trimmed to the fields and versions the tests need.",
+ "minified": "composer/2.0",
+ "packages": {
+  "monolog/monolog": [
+   {
+    "name": "monolog/monolog",
+    "version": "3.12.1",
+    "version_normalized": "3.12.1.0",
+    "time": "2026-09-29T19:21:12+00:00",
+    "extra": {
+     "branch-alias": {
+      "dev-main": "3.x-dev"
+     }
+    },
+    "require": {
+     "php": ">=8.1",
+     "psr/log": "^2.0 || ^3.0"
+    }
+   },
+   {
+    "version": "3.12.0",
+    "version_normalized": "3.12.0.0",
+    "time": "2026-09-09T08:34:20+00:00"
+   },
+   {
+    "version": "3.0.0",
+    "version_normalized": "3.0.0.0",
+    "time": "2022-05-10T10:39:55+00:00"
+   },
+   {
+    "version": "3.0.0-RC1",
+    "version_normalized": "3.0.0.0-RC1",
+    "time": "2022-05-08T21:50:49+00:00"
+   },
+   {
+    "version": "2.9.3",
+    "version_normalized": "2.9.3.0",
+    "time": "2024-04-12T20:52:51+00:00",
+    "extra": {
+     "branch-alias": {
+      "dev-main": "2.x-dev"
+     }
+    },
+    "require": {
+     "php": ">=7.2",
+     "psr/log": "^1.0.1 || ^2.0 || ^3.0"
+    }
+   },
+   {
+    "version": "2.0.0",
+    "version_normalized": "2.0.0.0",
+    "time": "2019-08-30T09:56:44+00:00",
+    "extra": {
+     "branch-alias": {
+      "dev-master": "2.x-dev"
+     }
+    },
+    "require": {
+     "php": "^7.2",
+     "psr/log": "^1.0.1"
+    }
+   },
+   {
+    "version": "1.0.0",
+    "version_normalized": "1.0.0.0",
+    "time": "2011-07-07T16:21:02+00:00",
+    "require": {
+     "php": ">=5.3.0"
+    },
+    "extra": "__unset"
+   },
+   {
+    "version": "1.0.0-RC1",
+    "version_normalized": "1.0.0.0-RC1",
+    "time": "2011-07-01T19:29:40+00:00"
+   }
+  ]
+ }
+}

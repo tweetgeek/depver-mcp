@@ -10,7 +10,7 @@ export type Ecosystem = (typeof ECOSYSTEMS)[number];
 export interface PackageQuery {
   ecosystem: string;
   name: string;
-  version?: string;
+  version?: string | undefined;
 }
 
 export type Status = "ok" | "deprecated" | "not_found" | "error";

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveEcosystem } from "../../../src/adapters/index.js";
+import { getAdapter, resolveEcosystem } from "../../../src/adapters/index.js";
 import { UnknownEcosystem } from "../../../src/core/errors.js";
 
 describe("resolveEcosystem", () => {
@@ -28,5 +28,11 @@ describe("resolveEcosystem", () => {
   it("throws UnknownEcosystem listing the supported names", () => {
     expect(() => resolveEcosystem("cargo")).toThrow(UnknownEcosystem);
     expect(() => resolveEcosystem("cargo")).toThrow("npm, pypi, pub, packagist");
+  });
+});
+
+describe("getAdapter", () => {
+  it.each(["npm", "pypi", "pub", "packagist"] as const)("resolves the %s adapter", (id) => {
+    expect(getAdapter(id).id).toBe(id);
   });
 });
