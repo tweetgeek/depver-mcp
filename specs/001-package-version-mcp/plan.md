@@ -51,7 +51,7 @@ for every verified registry fact behind these choices.
 | IV. Minimal Dependencies and Fast Startup | Runtime deps after bundling: none. Inlined: MCP server SDK, zod, semver. Limiter, cache, PEP 440 and Composer logic are in-house (each < 300 lines). `tsup` single ESM file with shebang; `engines.node >= 20`. | PASS |
 | V. One Adapter per Ecosystem | `src/adapters/<ecosystem>.ts` implements the `Adapter` contract (normalizeName, fetch, isPrerelease, compare, parseVersionOrRange, concurrency); a static registry table plus alias map is the only shared knowledge of ecosystems; the tool schema is ecosystem-agnostic (`ecosystem` is a string validated against the table at runtime). | PASS |
 | VI. Tests Without Network | Injected `fetchJson`; fixtures under `tests/fixtures/<ecosystem>/`; mandatory fixture set per adapter listed in R9; test-first order encoded in the task plan; CI sets a dead proxy. | PASS |
-| VII. English-Only, Open-Source Quality | All artifacts in English; README, LICENSE (MIT, owner's choice to confirm), CONTRIBUTING with the "one adapter file" recipe; Conventional Commits. | PASS |
+| VII. English-Only, Open-Source Quality | All artifacts in English; README, LICENSE (MIT), CONTRIBUTING with the "one adapter file" recipe; Conventional Commits. | PASS |
 | Technology Constraints | Node 20+, TypeScript strict, official MCP TypeScript SDK (v2 line, `@modelcontextprotocol/server`) over stdio, zod, built-in fetch with abort timeouts, semver for npm/pub.dev, in-house PEP 440 and Composer modules, tsup, vitest. Constitution 1.0.1 wording matches these choices. | PASS |
 
 **Post-design re-check (after Phase 1)**: unchanged. The data model, contract and quickstart
@@ -81,7 +81,7 @@ package.json             # type: module, bin, engines.node >=20, files: [dist], 
 tsconfig.json            # strict, NodeNext, ES2022
 tsup.config.ts           # esm, node20, shebang + createRequire banner, noExternal: all
 vitest.config.ts
-LICENSE                  # MIT (to confirm)
+LICENSE                  # MIT
 README.md                # purpose, install snippet, tool contract, ecosystems, statuses, license
 CONTRIBUTING.md          # how to add an adapter (one file + fixtures + table entry)
 CHANGELOG.md
@@ -161,7 +161,7 @@ fixtures grouped by ecosystem so adding an adapter means touching exactly `src/a
 ## Delivery pipeline
 
 - `ci.yml`: on pull requests and pushes to `main`, run `npm ci`, `npm run build`, `npm test` on a matrix of Node 20, 22, 24 on `ubuntu-latest`, with `HTTPS_PROXY` pointed at a closed port so any accidental network call fails.
-- `release.yml`: on tags `v*`, build on Node 22 and `npm publish --provenance --access public`; changelog generated from Conventional Commits.
+- `release.yml`: on tags `v*`, build on Node 22 and `npm publish --provenance --access public`; GitHub release notes generated from Conventional Commits. `CHANGELOG.md` is hand-maintained in Keep a Changelog format and updated in the PR that makes the change.
 - Versioning: `0.1.0` first; minor versions may change response keys until `1.0.0`, which freezes the `check_packages` contract.
 
 ## Phase outputs
