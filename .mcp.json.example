@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "depver": {
+      "command": "npx",
+      "args": ["-y", "depver-mcp"]
+    }
+  }
+}

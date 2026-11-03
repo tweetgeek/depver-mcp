@@ -216,3 +216,192 @@ describe("truncateSentence", () => {
     expect(out).not.toMatch(/\s{2}/);
   });
 });
+
+describe("formatResult for deprecated packages", () => {
+  it("reports deprecated with versions and a one-sentence message", () => {
+    const out = formatResult(
+      query("pkg"),
+      "npm",
+      "pkg",
+      info([{ version: "2.88.2", prerelease: false }], {
+        deprecated: {
+          message:
+            "request has been deprecated, see https://github.com/request/request/issues/3142. Please migrate.",
+        },
+      }),
+      npmAdapter,
+    );
+    expect(out).toEqual({
+      e: "npm",
+      n: "pkg",
+      s: "deprecated",
+      stable: "2.88.2",
+      latest: "2.88.2",
+      msg: "request has been deprecated, see https://github.com/request/request/issues/3142.",
+    });
+  });
+
+  it("caps a run-on deprecation message at 160 characters", () => {
+    const out = formatResult(
+      query("pkg"),
+      "npm",
+      "pkg",
+      info([{ version: "1.0.0", prerelease: false }], { deprecated: { message: "x".repeat(500) } }),
+      npmAdapter,
+    );
+    expect(out.msg?.length).toBe(160);
+  });
+
+  it("lets deprecation win over the all-yanked message", () => {
+    const out = formatResult(
+      query("pkg"),
+      "pypi",
+      "pkg",
+      info([{ version: "1.0.0", prerelease: false, yanked: true }], {
+        deprecated: { message: "project marked deprecated on PyPI" },
+      }),
+      pypiAdapter,
+    );
+    expect(out).toEqual({
+      e: "pypi",
+      n: "pkg",
+      s: "deprecated",
+      msg: "project marked deprecated on PyPI",
+    });
+  });
+});
+
+describe("formatResult with a version check", () => {
+  const versions = [
+    { version: "17.0.2", prerelease: false },
+    { version: "18.2.0", prerelease: false, deprecated: "please upgrade" },
+    { version: "18.3.1", prerelease: false },
+    { version: "19.0.0-rc.1", prerelease: true },
+    { version: "19.0.0", prerelease: false },
+  ];
+
+  it("echoes the version and reports v_exists for a published exact version", () => {
+    const out = formatResult(query("pkg", "18.3.1"), "npm", "pkg", info(versions), npmAdapter);
+    expect(out).toEqual({
+      e: "npm",
+      n: "pkg",
+      s: "ok",
+      stable: "19.0.0",
+      latest: "19.0.0",
+      v: "18.3.1",
+      v_exists: true,
+    });
+  });
+
+  it("reports v_exists false for a missing exact version while keeping stable and latest", () => {
+    const out = formatResult(query("pkg", "18.99.0"), "npm", "pkg", info(versions), npmAdapter);
+    expect(out).toMatchObject({
+      s: "ok",
+      stable: "19.0.0",
+      latest: "19.0.0",
+      v: "18.99.0",
+      v_exists: false,
+    });
+  });
+
+  it("reports v_deprecated for an exact npm version carrying a notice, with status still ok", () => {
+    const out = formatResult(query("pkg", "18.2.0"), "npm", "pkg", info(versions), npmAdapter);
+    expect(out).toMatchObject({ s: "ok", v: "18.2.0", v_exists: true, v_deprecated: true });
+    expect("v_yanked" in out).toBe(false);
+  });
+
+  it("reports v_yanked for an exact PyPI version and omits v_deprecated", () => {
+    const out = formatResult(
+      { ecosystem: "pypi", name: "pkg", version: "2.32.0" },
+      "pypi",
+      "pkg",
+      info([
+        { version: "2.32.0", prerelease: false, yanked: true },
+        { version: "2.32.5", prerelease: false, yanked: false },
+      ]),
+      pypiAdapter,
+    );
+    expect(out).toEqual({
+      e: "pypi",
+      n: "pkg",
+      s: "ok",
+      stable: "2.32.5",
+      latest: "2.32.5",
+      v: "2.32.0",
+      v_exists: true,
+      v_yanked: true,
+    });
+  });
+
+  it("matches an exact version loosely across equivalent spellings", () => {
+    const out = formatResult(query("pkg", "v18.3.1"), "npm", "pkg", info(versions), npmAdapter);
+    expect(out).toMatchObject({ v: "v18.3.1", v_exists: true });
+  });
+
+  it("resolves a range to the highest stable, non-yanked match", () => {
+    const out = formatResult(query("pkg", "^18"), "npm", "pkg", info(versions), npmAdapter);
+    expect(out).toEqual({
+      e: "npm",
+      n: "pkg",
+      s: "ok",
+      stable: "19.0.0",
+      latest: "19.0.0",
+      v: "^18",
+      v_match: "18.3.1",
+    });
+  });
+
+  it("never resolves a range to a pre-release or a yanked version", () => {
+    const out = formatResult(
+      { ecosystem: "pypi", name: "pkg", version: ">=2.0" },
+      "pypi",
+      "pkg",
+      info([
+        { version: "2.0.0", prerelease: false, yanked: false },
+        { version: "2.1.0", prerelease: false, yanked: true },
+        { version: "2.2.0rc1", prerelease: true, yanked: false },
+      ]),
+      pypiAdapter,
+    );
+    expect(out.v_match).toBe("2.0.0");
+  });
+
+  it("reports v_match null when nothing satisfies the range", () => {
+    const out = formatResult(query("pkg", "^99"), "npm", "pkg", info(versions), npmAdapter);
+    expect(out).toMatchObject({ s: "ok", v: "^99", v_match: null });
+    expect("v_match" in out).toBe(true);
+  });
+
+  it("turns an unparseable range into error for the item with a one-sentence message", () => {
+    const out = formatResult(query("pkg", ">>=1"), "npm", "pkg", info(versions), npmAdapter);
+    expect(out).toEqual({
+      e: "npm",
+      n: "pkg",
+      s: "error",
+      v: ">>=1",
+      msg: 'cannot parse npm version or range ">>=1"',
+    });
+  });
+
+  it("keeps the deprecated status when a version check is present", () => {
+    const out = formatResult(
+      query("pkg", "18.3.1"),
+      "npm",
+      "pkg",
+      info(versions, { deprecated: { message: "dead" } }),
+      npmAdapter,
+    );
+    expect(out).toMatchObject({ s: "deprecated", msg: "dead", v: "18.3.1", v_exists: true });
+  });
+
+  it("adds no version keys for not_found even when a version was asked", () => {
+    const out = formatResult(
+      query("pkg", "1.0.0"),
+      "npm",
+      "pkg",
+      { kind: "not_found", name: "pkg" },
+      npmAdapter,
+    );
+    expect(out).toEqual({ e: "npm", n: "pkg", s: "not_found", v: "1.0.0" });
+  });
+});

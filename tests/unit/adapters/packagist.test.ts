@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { expandMinified, packagistAdapter } from "../../../src/adapters/packagist.js";
-import { InvalidName, RegistryError } from "../../../src/core/errors.js";
+import { InvalidName, RegistryError, UnparseableRange } from "../../../src/core/errors.js";
 import { loadFixture, stubFetchJson } from "../../helpers/stub-fetch.js";
 
 describe("packagist adapter: normalizeName", () => {
@@ -116,5 +116,57 @@ describe("packagist adapter: ordering", () => {
     expect(packagistAdapter.isPrerelease("1.0.0-patch1")).toBe(false);
     expect(packagistAdapter.id).toBe("packagist");
     expect(packagistAdapter.concurrency).toBe(6);
+  });
+});
+
+describe("packagist adapter: abandoned packages", () => {
+  it("marks an abandoned package with a replacement as deprecated naming the replacement", async () => {
+    const stub = stubFetchJson({
+      "https://repo.packagist.org/p2/swiftmailer/swiftmailer.json": {
+        status: 200,
+        fixture: "packagist/swiftmailer-abandoned.json",
+      },
+    });
+    const info = await packagistAdapter.fetch("swiftmailer/swiftmailer", stub.fetchJson);
+    if (info.kind !== "info") throw new Error("expected info");
+    expect(info.deprecated).toEqual({ message: "abandoned, use symfony/mailer" });
+  });
+
+  it("marks an abandoned package without replacement as plainly abandoned", async () => {
+    const stub = stubFetchJson({
+      "https://repo.packagist.org/p2/fzaninotto/faker.json": {
+        status: 200,
+        fixture: "packagist/faker-abandoned.json",
+      },
+    });
+    const info = await packagistAdapter.fetch("fzaninotto/faker", stub.fetchJson);
+    if (info.kind !== "info") throw new Error("expected info");
+    expect(info.deprecated).toEqual({ message: "abandoned" });
+  });
+
+  it("does not mark a healthy package as deprecated", async () => {
+    const stub = stubFetchJson({
+      "https://repo.packagist.org/p2/monolog/monolog.json": {
+        status: 200,
+        fixture: "packagist/monolog-p2.json",
+      },
+    });
+    const info = await packagistAdapter.fetch("monolog/monolog", stub.fetchJson);
+    if (info.kind !== "info") throw new Error("expected info");
+    expect(info.deprecated).toBeUndefined();
+  });
+});
+
+describe("packagist adapter: version checks", () => {
+  it("delegates to the Composer constraint parser", () => {
+    expect(packagistAdapter.parseVersionOrRange("v10.48.29")).toEqual({
+      kind: "exact",
+      version: "v10.48.29",
+    });
+    const check = packagistAdapter.parseVersionOrRange("~10.0");
+    if (check.kind !== "range") throw new Error("expected range");
+    expect(check.matches("v10.48.29")).toBe(true);
+    expect(check.matches("v11.0.0")).toBe(false);
+    expect(() => packagistAdapter.parseVersionOrRange("dev-main")).toThrow(UnparseableRange);
   });
 });

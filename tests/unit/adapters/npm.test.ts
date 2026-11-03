@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { npmAdapter } from "../../../src/adapters/npm.js";
-import { InvalidName, RegistryError } from "../../../src/core/errors.js";
+import { InvalidName, RegistryError, UnparseableRange } from "../../../src/core/errors.js";
 import { stubFetchJson } from "../../helpers/stub-fetch.js";
 
 const ACCEPT = "application/vnd.npm.install-v1+json";
@@ -100,5 +100,42 @@ describe("npm adapter: ordering", () => {
   it("declares a concurrency limit of 6", () => {
     expect(npmAdapter.concurrency).toBe(6);
     expect(npmAdapter.id).toBe("npm");
+  });
+});
+
+describe("npm adapter: package-level deprecation", () => {
+  it("marks the package deprecated when the latest-tagged version carries a deprecation message", async () => {
+    const stub = stubFetchJson({
+      "https://registry.npmjs.org/request": { status: 200, fixture: "npm/request-abbrev.json" },
+    });
+    const info = await npmAdapter.fetch("request", stub.fetchJson);
+    if (info.kind !== "info") throw new Error("expected info");
+    expect(info.deprecated?.message).toMatch(/^request has been deprecated/);
+  });
+
+  it("does not mark the package deprecated when only an old version is deprecated", async () => {
+    const stub = stubFetchJson({
+      "https://registry.npmjs.org/old-dep": {
+        status: 200,
+        fixture: "npm/old-version-deprecated.json",
+      },
+    });
+    const info = await npmAdapter.fetch("old-dep", stub.fetchJson);
+    if (info.kind !== "info") throw new Error("expected info");
+    expect(info.deprecated).toBeUndefined();
+    expect(info.versions.find((v) => v.version === "1.0.0")?.deprecated).toMatch(
+      /no longer supported/,
+    );
+  });
+});
+
+describe("npm adapter: version checks", () => {
+  it("delegates exact versions and node-semver ranges to the semver module", () => {
+    expect(npmAdapter.parseVersionOrRange("18.2.0")).toEqual({ kind: "exact", version: "18.2.0" });
+    const check = npmAdapter.parseVersionOrRange("^18");
+    if (check.kind !== "range") throw new Error("expected range");
+    expect(check.matches("18.3.1")).toBe(true);
+    expect(check.matches("19.0.0")).toBe(false);
+    expect(() => npmAdapter.parseVersionOrRange("latest")).toThrow(UnparseableRange);
   });
 });

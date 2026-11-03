@@ -94,6 +94,9 @@ export function formatResult(
   }
 
   const fetched = outcome as FetchOutcome;
+  const requested = query.version !== undefined && query.version !== "" ? query.version : undefined;
+  if (requested !== undefined) base.v = requested;
+
   if (fetched.kind === "not_found") {
     return stripEmpty({
       ...base,
@@ -116,5 +119,47 @@ export function formatResult(
     result.msg = truncateSentence(fetched.deprecated.message, MAX_MSG_LENGTH);
   }
 
+  if (requested !== undefined) {
+    try {
+      applyVersionCheck(result, requested, fetched, adapter);
+    } catch (err) {
+      // An unparseable version or range fails this item only and says nothing about the package.
+      return stripEmpty({
+        ...base,
+        s: "error",
+        msg: truncateSentence(errorMessage(err), MAX_MSG_LENGTH),
+      });
+    }
+  }
+
   return stripEmpty(result);
+}
+
+function sameVersion(adapter: Adapter, a: string, b: string): boolean {
+  try {
+    return adapter.compare(a, b) === 0;
+  } catch {
+    return false;
+  }
+}
+
+/** Exact version: v_exists plus v_yanked / v_deprecated when the registry knows them. Range: v_match. */
+function applyVersionCheck(
+  result: PackageResult,
+  requested: string,
+  info: VersionInfo,
+  adapter: Adapter,
+): void {
+  const check = adapter.parseVersionOrRange(requested);
+  if (check.kind === "exact") {
+    const entry = info.versions.find((v) => sameVersion(adapter, v.version, check.version));
+    result.v_exists = entry !== undefined;
+    if (entry?.yanked !== undefined) result.v_yanked = entry.yanked;
+    if (entry?.deprecated !== undefined) result.v_deprecated = true;
+    return;
+  }
+  const candidates = info.versions.filter(
+    (v) => !v.prerelease && !v.yanked && check.matches(v.version),
+  );
+  result.v_match = highest(candidates, adapter)?.version ?? null;
 }

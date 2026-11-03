@@ -5,6 +5,7 @@ import {
   formatComposer,
   isComposerPrerelease,
   normalizeComposer,
+  parseComposerCheck,
   type ComposerStability,
 } from "../../../src/versions/composer.js";
 
@@ -203,4 +204,125 @@ describe("formatComposer", () => {
       expect(formatComposer(v)).toBe(input);
     },
   );
+});
+
+describe("parseComposerCheck", () => {
+  const exact: Array<[string, string]> = [
+    ["1.2.3", "1.2.3"],
+    ["=1.2.3", "1.2.3"],
+    ["==1.2.3", "1.2.3"],
+    ["v1.2.3", "v1.2.3"],
+    ["1.0.0-beta1", "1.0.0-beta1"],
+    [" 1.2.3 ", "1.2.3"],
+    ["= 1.2.3", "1.2.3"],
+  ];
+
+  it.each(exact)("parses %j as the exact version %s", (input, version) => {
+    expect(parseComposerCheck(input)).toEqual({ kind: "exact", version });
+  });
+
+  function range(input: string): (version: string) => boolean {
+    const check = parseComposerCheck(input);
+    if (check.kind !== "range") throw new Error(`${input} did not parse as a range`);
+    return check.matches;
+  }
+
+  const ranges: Array<[string, string[], string[]]> = [
+    ["1.0.*", ["1.0.0", "1.0.9", "v1.0.3"], ["0.9.9", "1.1.0", "2.0.0"]],
+    ["1.*", ["1.0.0", "1.9.9"], ["0.9.9", "2.0.0"]],
+    ["1.0.x", ["1.0.9"], ["1.1.0"]],
+    ["1.0.X", ["1.0.9"], ["1.1.0"]],
+    [">=1.0 <2.0", ["1.0.0", "1.5.0", "1.9.9"], ["0.9.9", "2.0.0", "2.1.0"]],
+    [">=1.0,<2.0", ["1.0.0", "1.5.0"], ["0.9.9", "2.0.0"]],
+    [">=1.0, <2.0", ["1.5.0"], ["2.0.0"]],
+    [">1.0", ["1.0.1", "2.0.0"], ["1.0.0", "0.9.0"]],
+    ["<=1.0", ["1.0.0", "0.9.0"], ["1.0.1"]],
+    ["<>1.0.0", ["0.9.9", "1.0.1"], ["1.0.0"]],
+    ["!=1.0.0", ["0.9.9", "1.0.1", "1.0.0.1"], ["1.0.0", "v1.0.0"]],
+    ["1.0 - 2.0", ["1.0.0", "1.5.0", "2.0.0", "2.0.9"], ["0.9.9", "2.1.0"]],
+    ["1.0.0 - 2.1.0", ["1.0.0", "2.0.9", "2.1.0"], ["0.9.9", "2.1.1"]],
+    ["1 - 2", ["1.0.0", "2.9.9"], ["0.9.9", "3.0.0"]],
+    ["~1", ["1.0.0", "1.9.9"], ["0.9.9", "2.0.0"]],
+    ["~1.2", ["1.2.0", "1.9.0"], ["1.1.9", "2.0.0"]],
+    ["~1.2.3", ["1.2.3", "1.2.9"], ["1.2.2", "1.3.0"]],
+    ["~10.0", ["10.0.0", "10.48.29"], ["9.9.9", "11.0.0"]],
+    ["~1.2.3.4", ["1.2.3.4", "1.2.3.9"], ["1.2.3.3", "1.2.4"]],
+    ["^1.2.3", ["1.2.3", "1.9.9"], ["1.2.2", "2.0.0"]],
+    ["^1.2", ["1.2.0", "1.9.9"], ["1.1.9", "2.0.0"]],
+    ["^1.0", ["1.0.0", "1.9.9"], ["0.9.9", "2.0.0"]],
+    ["^0.3", ["0.3.0", "0.3.9"], ["0.2.9", "0.4.0"]],
+    ["^0.0.3", ["0.0.3"], ["0.0.2", "0.0.4"]],
+    ["^1.0 || ^2.0", ["1.5.0", "2.5.0"], ["0.9.9", "3.0.0"]],
+    ["^1.0 | ^2.0", ["1.5.0", "2.5.0"], ["3.0.0"]],
+    ["^1.0||^2.0", ["1.5.0", "2.5.0"], ["3.0.0"]],
+    [">=1.0 <1.5 || >=2.0 <2.5", ["1.2.0", "2.2.0"], ["1.7.0", "2.7.0", "3.0.0"]],
+    ["1.0.*@dev", ["1.0.5"], ["1.1.0"]],
+    ["^1.0@beta", ["1.5.0"], ["2.0.0"]],
+    ["~1.2@RC", ["1.9.0"], ["2.0.0"]],
+    [">=1.0@stable", ["1.0.0"], ["0.9.9"]],
+    ["*", ["0.0.1", "1.0.0", "99.99.99", "1.0.0-beta1"], []],
+    ["x", ["1.0.0"], []],
+    ["X", ["1.0.0"], []],
+    ["*@dev", ["1.0.0"], []],
+    ["  >=1.0   <2.0  ", ["1.5.0"], ["2.0.0"]],
+    ["1.0.0 2.0.0", [], ["1.0.0", "2.0.0", "1.5.0"]],
+    [">=2.0 <1.0", [], ["0.9.0", "1.5.0", "2.5.0"]],
+  ];
+
+  it.each(ranges)("range %j matches %j and rejects %j", (input, yes, no) => {
+    const matches = range(input);
+    for (const v of yes) expect(matches(v), `${input} should match ${v}`).toBe(true);
+    for (const v of no) expect(matches(v), `${input} should not match ${v}`).toBe(false);
+  });
+
+  it("follows plain Composer ordering for pre-releases against an upper bound", () => {
+    // 2.0.0-RC1 < 2.0.0 in Composer, so `<2.0.0` admits it; callers filter pre-releases.
+    expect(range("<2.0.0")("2.0.0-RC1")).toBe(true);
+    expect(range(">=1.0 <2.0")("1.0.0-beta1")).toBe(false);
+  });
+
+  it("returns false from matches() for branches and unparseable versions", () => {
+    const matches = range("*");
+    expect(matches("dev-main")).toBe(false);
+    expect(matches("2.x-dev")).toBe(false);
+    expect(matches("latest")).toBe(false);
+    expect(matches("")).toBe(false);
+    expect(range(">=1.0")("1.x-dev")).toBe(false);
+  });
+
+  const invalid = [
+    "",
+    "   ",
+    "dev-main",
+    "dev-master",
+    "1.x-dev",
+    "2.*-dev",
+    "#abc123",
+    "1.0 as 2.0",
+    "~>1.2",
+    ">>=1",
+    "latest",
+    "1.0.0-foo",
+    "^",
+    "~",
+    ">=",
+    "1.0 -",
+    "1.0-2.0",
+    "1.0 - ",
+    "^1.0 ||",
+    "|| ^1.0",
+    "foo",
+    "x.y.z",
+    "1.0.0@nightly",
+    "1.0.0 - 2.0.0 - 3.0.0",
+  ];
+
+  it.each(invalid)("throws UnparseableRange for %j", (input) => {
+    expect(() => parseComposerCheck(input)).toThrow(UnparseableRange);
+    expect(() => parseComposerCheck(input)).toThrow(/cannot parse Composer version or constraint/);
+  });
+
+  it("names the input in the error message", () => {
+    expect(() => parseComposerCheck("~>1.2")).toThrow('"~>1.2"');
+  });
 });

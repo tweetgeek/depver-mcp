@@ -193,3 +193,62 @@ describe("createCheckPackages", () => {
     expect(again.results[0]?.s).toBe("ok");
   });
 });
+
+describe("createCheckPackages: nothing-installable and deprecation signals", () => {
+  const SIGNAL_ROUTES: Record<string, Route> = {
+    [`${NPM}/unpublish-me`]: { status: 200, fixture: "npm/unpublished.json" },
+    [`${NPM}/request`]: { status: 200, fixture: "npm/request-abbrev.json" },
+    [`${NPM}/never`]: { status: 404, fixture: "npm/not-found.json" },
+    "https://pypi.org/simple/quarantined-lib/": { status: 200, fixture: "pypi/quarantined.json" },
+    "https://pypi.org/simple/gone-lib/": { status: 200, fixture: "pypi/all-yanked.json" },
+    "https://pub.dev/api/packages/pedantic": { status: 200, fixture: "pub/pedantic.json" },
+    "https://repo.packagist.org/p2/swiftmailer/swiftmailer.json": {
+      status: 200,
+      fixture: "packagist/swiftmailer-abandoned.json",
+    },
+  };
+
+  it("maps each registry's signal to the agreed status and message", async () => {
+    const { check } = build(SIGNAL_ROUTES);
+    const { results } = await check({
+      packages: [
+        { ecosystem: "npm", name: "unpublish-me" },
+        { ecosystem: "pypi", name: "quarantined-lib" },
+        { ecosystem: "pypi", name: "gone-lib" },
+        { ecosystem: "npm", name: "never" },
+        { ecosystem: "npm", name: "request" },
+        { ecosystem: "pub", name: "pedantic" },
+        { ecosystem: "packagist", name: "swiftmailer/swiftmailer" },
+      ],
+    });
+    expect(results[0]).toEqual({
+      e: "npm",
+      n: "unpublish-me",
+      s: "not_found",
+      msg: "unpublished from npm",
+    });
+    expect(results[1]).toEqual({
+      e: "pypi",
+      n: "quarantined-lib",
+      s: "not_found",
+      msg: "quarantined by PyPI",
+    });
+    expect(results[2]).toEqual({ e: "pypi", n: "gone-lib", s: "ok", msg: "all versions yanked" });
+    expect(results[3]).toEqual({ e: "npm", n: "never", s: "not_found" });
+    expect(results[4]?.s).toBe("deprecated");
+    expect(results[4]?.msg).toMatch(/^request has been deprecated/);
+    expect(results[4]?.stable).toBe("2.88.2");
+    expect(results[5]).toMatchObject({
+      e: "pub",
+      n: "pedantic",
+      s: "deprecated",
+      msg: "discontinued, replaced by lints",
+    });
+    expect(results[6]).toMatchObject({
+      e: "packagist",
+      n: "swiftmailer/swiftmailer",
+      s: "deprecated",
+      msg: "abandoned, use symfony/mailer",
+    });
+  });
+});
