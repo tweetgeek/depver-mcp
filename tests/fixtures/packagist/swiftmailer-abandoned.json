@@ -1,0 +1,32 @@
+{
+ "_note": "Recorded 2026-11-03 from the live registry and trimmed to the fields and versions the tests need.",
+ "minified": "composer/2.0",
+ "packages": {
+  "swiftmailer/swiftmailer": [
+   {
+    "name": "swiftmailer/swiftmailer",
+    "version": "v6.3.0",
+    "version_normalized": "6.3.0.0",
+    "time": "2021-10-18T15:26:12+00:00",
+    "extra": {
+     "branch-alias": {
+      "dev-master": "6.2-dev"
+     }
+    },
+    "require": {
+     "php": ">=7.0.0",
+     "egulias/email-validator": "^2.0|^3.1",
+     "symfony/polyfill-iconv": "^1.0",
+     "symfony/polyfill-mbstring": "^1.0",
+     "symfony/polyfill-intl-idn": "^1.10"
+    },
+    "abandoned": "symfony/mailer"
+   },
+   {
+    "version": "v6.2.7",
+    "version_normalized": "6.2.7.0",
+    "time": "2021-03-09T12:30:35+00:00"
+   }
+  ]
+ }
+}

@@ -1,0 +1,33 @@
+{
+ "_note": "Synthetic: exercises key inheritance and __unset in the composer/2.0 minified format.",
+ "minified": "composer/2.0",
+ "packages": {
+  "acme/widget": [
+   {
+    "name": "acme/widget",
+    "version": "1.2.0",
+    "version_normalized": "1.2.0.0",
+    "require": {
+     "php": ">=8.1"
+    },
+    "extra": {
+     "branch-alias": {
+      "dev-main": "1.x-dev"
+     }
+    }
+   },
+   {
+    "version": "1.1.0",
+    "version_normalized": "1.1.0.0",
+    "extra": "__unset"
+   },
+   {
+    "version": "1.0.0",
+    "version_normalized": "1.0.0.0",
+    "require": {
+     "php": ">=8.0"
+    }
+   }
+  ]
+ }
+}

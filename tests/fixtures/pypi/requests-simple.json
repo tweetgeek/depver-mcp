@@ -1,0 +1,59 @@
+{
+ "_note": "Recorded 2026-11-03 from the live registry and trimmed to the fields and versions the tests need.",
+ "meta": {
+  "_last-serial": 37059094,
+  "api-version": "1.4"
+ },
+ "name": "requests",
+ "project-status": {
+  "status": "active"
+ },
+ "versions": [
+  "2.19.1",
+  "2.31.0",
+  "2.32.0",
+  "2.32.5"
+ ],
+ "files": [
+  {
+   "filename": "requests-2.19.1-py2.py3-none-any.whl",
+   "yanked": false,
+   "upload-time": "2018-06-14T13:40:38.236729Z"
+  },
+  {
+   "filename": "requests-2.19.1.tar.gz",
+   "yanked": false,
+   "upload-time": "2018-06-14T13:40:41.014589Z"
+  },
+  {
+   "filename": "requests-2.31.0-py3-none-any.whl",
+   "yanked": false,
+   "upload-time": "2023-05-22T15:12:42.313790Z"
+  },
+  {
+   "filename": "requests-2.31.0.tar.gz",
+   "yanked": false,
+   "upload-time": "2023-05-22T15:12:44.175995Z"
+  },
+  {
+   "filename": "requests-2.32.0-py3-none-any.whl",
+   "yanked": "Yanked due to conflicts with CVE-2024-35195 mitigation",
+   "upload-time": "2024-05-20T16:08:19.530618Z"
+  },
+  {
+   "filename": "requests-2.32.0.tar.gz",
+   "yanked": "Yanked due to conflicts with CVE-2024-35195 mitigation",
+   "upload-time": "2024-05-20T16:11:48.306524Z"
+  },
+  {
+   "filename": "requests-2.32.5-py3-none-any.whl",
+   "yanked": false,
+   "upload-time": "2025-08-18T20:46:00.542304Z"
+  },
+  {
+   "filename": "requests-2.32.5.tar.gz",
+   "yanked": false,
+   "upload-time": "2025-08-18T20:46:02.573425Z"
+  }
+ ]
+}

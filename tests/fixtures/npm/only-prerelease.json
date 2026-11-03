@@ -1,0 +1,14 @@
+{
+ "_note": "Synthetic: the only version is a pre-release and dist-tag latest points at it.",
+ "name": "only-pre",
+ "modified": "2026-01-01T00:00:00.000Z",
+ "dist-tags": {
+  "latest": "0.1.0-beta.1"
+ },
+ "versions": {
+  "0.1.0-beta.1": {
+   "name": "only-pre",
+   "version": "0.1.0-beta.1"
+  }
+ }
+}

@@ -1,0 +1,27 @@
+{
+ "_note": "Synthetic: newest version is a release candidate.",
+ "meta": {
+  "api-version": "1.4",
+  "_last-serial": 1
+ },
+ "name": "pre-newest",
+ "project-status": {
+  "status": "active"
+ },
+ "versions": [
+  "1.0.0",
+  "1.1.0rc1"
+ ],
+ "files": [
+  {
+   "filename": "pre-newest-1.0.0.tar.gz",
+   "yanked": false,
+   "upload-time": "2026-01-01T00:00:00.000000Z"
+  },
+  {
+   "filename": "pre-newest-1.1.0rc1.tar.gz",
+   "yanked": false,
+   "upload-time": "2026-01-01T00:00:00.000000Z"
+  }
+ ]
+}
